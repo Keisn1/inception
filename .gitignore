@@ -1,1 +1,5 @@
 /roam/transcendence.db
+/inception/secrets/credentials.txt
+/inception/secrets/db_password.txt
+/inception/secrets/db_root_password.txt
+/inception/srcs/.env

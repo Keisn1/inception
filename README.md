@@ -25,7 +25,7 @@ title: Readme
   - [ ] no Dockerhub (Alpine/Debian excluded)
 - [ ] containers must restart automatically in case of crash
 
-## Container
+## Containers
 
 ### NGINX
 
@@ -35,6 +35,10 @@ title: Readme
 
 - [ ] with php-fpm only (must be installed and configured)
 - [ ] without NGINX
+- [ ] 2 users
+  - [ ] administrator
+    - [ ] must not contain any form of 'admin' or 'administrator'
+  - [ ] another user
 
 ### MariaDB
 
@@ -42,17 +46,21 @@ title: Readme
 
 ### Volume 1
 
+- available under /home/kfreyer/data of the host machine
 - [ ] contains WordPress database
 
 ### Volume 2
 
+- available under /home/kfreyer/data of the host machine
 - [ ] contains WordPress files
 
 ### docker-network
 
 - [ ] establishes connection between the containers
+- [ ] configure domain name to point to the local IP address
+  (kfreyer.login.fr)
 
-## Exclamation point
+## Exclamation points
 
 - [ ] must not use commands that create infinite loops as a way to keep
   the process running
@@ -82,6 +90,8 @@ title: Readme
 
 - [ ] Using a proper init system or handling child processes to manage
   PID 1 characteristics.
+  - [tini](https://github.com/krallin/tini)
+  - [dumb init](https://github.com/Yelp/dumb-init)
 - [ ] Following multi-stage builds for smaller images.
 - [ ] Specifying exact versions for dependencies.
 - [ ] Minimizing the number of layers by combining commands where
@@ -89,16 +99,7 @@ title: Readme
 - [ ] Avoiding the use of root where possible for security reasons.
 - [ ] Keeping the image smaller by cleaning up unnecessary packages.
 
-## WordPress
-
-- [ ] 2 users
-  - [ ] administrator
-    - [ ] must not contain any form of 'admin' or 'administrator'
-  - [ ] another user
-
-## volumes
-
-- available under /home/kfreyer/data of the host machine
+## Directory structure
 
 # Bonus
 

@@ -1,0 +1,11 @@
+:PROPERTIES:
+:ID:       85cda9d0-9c90-4824-87cc-9b82753bb026
+:END:
+#+title: dockerignore
+#+date: [2025-06-30 Mon 22:12]
+#+startup: overview
+
+Helps docker to ignore certain files and directories
+- ignore build and output directories
+- ignore version control files
+- ignore sensitive data
