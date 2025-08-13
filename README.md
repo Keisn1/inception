@@ -1,5 +1,4 @@
 ---
-author: Kay Freyer
 title: Readme
 ---
 
@@ -62,7 +61,7 @@ title: Readme
 
 ## Exclamation points
 
-- [ ] must not use commands that create infinite loops as a way to keep
+- [ ] must avoid commands that create infinite loops as a way to keep
   the process running
 - [ ] no Hacky solutions like `tail -f`, `bash`, `sleep infinity`, and
   `while true`

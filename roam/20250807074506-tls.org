@@ -1,0 +1,13 @@
+:PROPERTIES:
+:ID:       714b9e07-86f2-45ad-b3df-5cf8a46c6907
+:END:
+#+title: TLS
+#+date: [2025-08-07 Thu 07:45]
+#+startup: overview
+
+1. Handshake communication
+   1. Browser asks to communicate over TLS
+   2. the server sends a over encryption algorithm (cipher) and its certificate
+   3. Browser verifies certificate with CA (certificate authority)
+   4. they agree on encryption keys (asy)
+   5. data is exchanged with symmetric shared secret (**AES - Advanced Encryption Standard*)

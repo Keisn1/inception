@@ -40,7 +40,7 @@
 - [ ] establishes connection between the containers
 - [ ] configure domain name to point to the local IP address (kfreyer.login.fr)
 ** Exclamation points
-- [ ] must not use commands that create infinite loops as a way to keep the process running
+- [ ] must avoid commands that create infinite loops as a way to keep the process running
 - [ ] no Hacky solutions like =tail -f=, =bash=, =sleep infinity=, and =while true=
   - without a long-running command specified in the Dockerfile, a container will exit/shutdown immediately after starting
   - configure a proper entrypoint
