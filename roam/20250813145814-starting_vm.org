@@ -1,0 +1,25 @@
+:PROPERTIES:
+:ID:       a97b12f6-d7af-4eb7-8390-8fa6708e4e8e
+:END:
+#+title: starting VM
+#+date: [2025-08-13 Mi 14:58]
+#+startup: overview
+
+1. Set scale factor to 225%
+2. Follow installation
+   - hostname and domain name
+     - [[id:c557bcf1-eeba-430a-9c58-40c7174b8e46][host and domain name]]
+           #+begin_example
+     hostname = incpetion
+     domainName = 42wolfsburg.de
+           #+end_example
+   - password - Root:
+     kfreyer123123
+   - User: kfreyer (realname: Kay Freyer)
+     password: kfreyer123123
+   - Disk setup
+     - all default, all in one
+   - Software
+     - system utilities
+     - ssh-server
+     - Vim?

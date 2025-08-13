@@ -1,0 +1,12 @@
+:PROPERTIES:
+:ID:       34f33dbf-5283-4133-b69a-af94dadbe62a
+:END:
+#+title: cloud-storage
+#+date: [2025-08-13 Mi 18:38]
+#+startup: overview
+
+- do snapshots
+- find installed configuation (under goinfre)
+- compress vhd file
+- upload files to cloud
+- download files to correct location, configuration should be findable by vmBox

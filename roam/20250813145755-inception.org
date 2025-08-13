@@ -1,0 +1,11 @@
+:PROPERTIES:
+:ID:       3bec4fe4-bec9-40aa-9326-51a18ac37d7f
+:END:
+#+title: inception
+#+date: [2025-08-13 Mi 14:57]
+#+startup: overview
+
+* Go through
+** [[id:30e1d721-7bdc-4ec9-8c66-57b88cba3640][debian installation]]
+** [[id:a97b12f6-d7af-4eb7-8390-8fa6708e4e8e][starting VM]]
+** [[id:1a5fdc3f-c98e-42e7-b679-37882cb232a8][install software]]

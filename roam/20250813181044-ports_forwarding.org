@@ -1,0 +1,45 @@
+:PROPERTIES:
+:ID:       1083cb3c-6369-4f4b-b70f-527a56fdd1ba
+:END:
+#+title: ports forwarding
+#+date: [2025-08-13 Mi 18:10]
+#+startup: overview
+
+* /etc/ssh/sshd_config
+#+begin_src conf
+PermitRootLogin yes
+#+end_src
+- disable login by key
+#+begin_src conf
+PasswordAuthentication yes
+#+end_src
+* restart ssh
+#+begin_src shell
+service ssh restart
+service ssh status
+#+end_src
+* setting up firewall
+- open port 42, 80 and 443 for the website
+  #+begin_src shell
+ufw enable
+ufw allow 42
+ufw allow 80
+ufw allow 443
+  #+end_src
+- check
+  #+begin_src shell
+ufw status
+  #+end_src
+* port forwarding (in Vbox)
+#+begin_example
+settings -> network -> advanced -> port forwarding,
+#+end_example
+|       |     |   |     |   |     |
+| ssh   | tcp |   |  42 |   |  42 |
+| http  | tcp |   |  80 |   |  80 |
+| https | tcp |   | 443 |   | 443 |
+* login via host
+#+begin_src shell
+ssh root@localhost -p 42
+ssh <your_nickname>@localhost -p 42
+#+end_src

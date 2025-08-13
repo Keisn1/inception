@@ -1,0 +1,13 @@
+:PROPERTIES:
+:ID:       9ec69f52-125b-476f-b6f6-321b1104e80f
+:END:
+#+title: start graphical env
+#+date: [2025-08-13 Mi 18:08]
+#+startup: overview
+
+* launch env
+#+begin_src shell
+startx
+#+end_src
+* webbrowser
+- select "launch webbrowser"

@@ -1,0 +1,50 @@
+:PROPERTIES:
+:ID:       30e1d721-7bdc-4ec9-8c66-57b88cba3640
+:END:
+#+title: debian installation
+#+date: [2025-08-13 Mi 14:07]
+#+startup: overview
+
+* Check checksum
+** what is it
+- says that the data has not been tempered with
+
+** How to
+1. download checksum with wget or curl
+2. use  =hashAlgo -c checksum= where
+   - hashAlgo is the algorithm that the data was hashed with
+   - checksum is the file you've downloaded
+
+* signature
+** what is it
+- verify the origin of data (checksum in that case)
+** how to
+1. data is being hashed
+   - the hash is being encrypted with a private key of the origin = =signature=
+2. user receives can download the signature and decrypt it with the public key
+   - signature is base64-encoded
+   - You can inspect it with GPG:
+     #+begin_src bash
+ gpg --list-packets SHA512SUMS.sign
+     #+end_src
+   - hash-algo is part of the signature-meta data
+3. user might need to trust the public key of the owner (against warnings)
+     #+begin_src bash
+     gpg --keyserver keyring.debian.org --recv-keys DF9B9C49EAA9298432589D76DA87E80D6294BE9B
+     gpg --edit-key DF9B9C49EAA9298432589D76DA87E80D6294BE9B
+     # In GPG prompt: trust → 5 (ultimate) → y → quit
+     #+end_src
+4. verify the signature
+   - decrypt it with public key
+   - create hash of data
+   - compare
+     #+begin_src bash
+gpg --verify SHA512SUMS.sign SHA512SUMS
+     #+end_src
+
+* Installation
+1. Create virtual machine
+   - 2 GB RAM
+   - 8 GB disk
+   - VDI format
+   - 2 cores

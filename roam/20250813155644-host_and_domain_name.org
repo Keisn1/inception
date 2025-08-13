@@ -1,0 +1,22 @@
+:PROPERTIES:
+:ID:       c557bcf1-eeba-430a-9c58-40c7174b8e46
+:END:
+#+title: host and domain name
+#+date: [2025-08-13 Mi 15:56]
+#+startup: overview
+
+*Hostname*: The local name of the machine (e.g., =mycomputer=, =web-server-01=)
+*Domain name*: The network domain it belongs to (e.g., =example.com=, =company.local=)
+
+Together they form the *FQDN* (Fully Qualified Domain Name):
+- =mycomputer.example.com=
+- =web-server-01.company.local=
+
+Check yours with:
+#+begin_src bash
+hostname          # just hostname
+hostname -f       # full FQDN
+hostname -d       # just domain
+#+end_src
+
+The hostname identifies the specific machine, while the domain organizes it within a larger network namespace.

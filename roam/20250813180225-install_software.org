@@ -1,0 +1,62 @@
+:PROPERTIES:
+:ID:       1a5fdc3f-c98e-42e7-b679-37882cb232a8
+:END:
+#+title: install software
+#+date: [2025-08-13 Mi 18:02]
+#+startup: overview
+
+* install applications
+** update repositories
+#+begin_src sh
+apt update
+#+end_src
+** sudo / ufw
+#+begin_src sh
+apt install -y sudo ufw
+#+end_src
+** docker
+- https://docs.docker.com/engine/install/debian/
+- uninstall
+  #+begin_src sh
+for pkg in docker.io docker-doc docker-compose podman-docker containerd runc; do sudo apt-get remove $pkg; done
+  #+end_src
+- install via repositories
+- get keys
+  #+begin_src shell
+sudo apt-get update
+sudo apt-get install ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+# Add the repository to Apt sources:
+echo \
+    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian \
+    $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+    sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt-get update
+  #+end_src
+- install
+  #+begin_src shell
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+  #+end_src
+- verify
+  #+begin_src shell
+sudo docker run hello-world
+  #+end_src
+** firefox
+#+begin_src sh
+apt install firefox
+#+end_src
+** graphics: openbox + xinit
+#+begin_src sh
+apt install openbox xinit
+#+end_src
+** terminal - kitty
+#+begin_src shell
+apt install kitty
+#+end_src
+** make
+#+begin_src shell
+apt install make
+#+end_src
