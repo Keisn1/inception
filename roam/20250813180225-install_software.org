@@ -46,7 +46,7 @@ sudo docker run hello-world
   #+end_src
 ** firefox
 #+begin_src sh
-apt install firefox
+apt install firefox-esr
 #+end_src
 ** graphics: openbox + xinit
 #+begin_src sh
