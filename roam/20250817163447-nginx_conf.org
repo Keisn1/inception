@@ -1,0 +1,89 @@
+:PROPERTIES:
+:ID:       36c44ed4-eb0e-4775-acde-dc052628278a
+:END:
+#+title: nginx conf
+#+date: [2025-08-17 Sun 16:34]
+#+startup: overview
+
+#+begin_src conf
+server {
+    listen      443 ssl;
+    server_name  kfreyer.42.fr www.kfreyer.42.fr;
+
+    root    /var/www/;
+
+    index index.php index.html;
+
+    ssl_certificate     /etc/nginx/ssl/kfreyer.42.fr.crt;
+    ssl_certificate_key /etc/nginx/ssl/kfreyer.42.fr.key;
+    ssl_protocols       TLSv1.2 TLSv1.3;
+    ssl_session_timeout 10m;
+    keepalive_timeout 70;
+
+    location / {
+        try_files $uri /index.php?$args /index.html;
+        add_header Last-Modified $date_gmt;
+        add_header Cache-Control 'no-store, no-cache';
+
+        # the following useful during development
+        if_modified_since off;
+        expires off;
+        etag off;
+    }
+
+#    location ~ \.php$ {
+#        fastcgi_split_path_info ^(.+\.php)(/.+)$;
+#        fastcgi_pass wordpress:9000;
+#        fastcgi_index index.php;
+#        include fastcgi_params;
+#        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+#        fastcgi_param PATH_INFO $fastcgi_path_info;
+#    }
+
+}
+#+end_src
+
+* listen
+- nginx will listen on 443
+- ssl:
+  all connections acetped on this port should work in ssl mode
+* root
+- sets the root directory of the requests
+* index
+- defines files that will be used as an index
+- checked in the specified order
+* ssl directives
+- https://nginx.org/en/docs/http/configuring_https_servers.html
+- need ssl on listening sockets
+- locations of server certificate and private key shall be specified
+- sesssion are stored in session cache
+  - cache timeout is by default 5 minutes and can be increased with ~ssl_session_timeout~
+* keepalive_timeout
+- is the time that a client connection will be kept open
+* location /
+- all uri's are oinog to this location since there is only this one
+** try_files
+- This directive tries to serve the request by looking for the file specified in =$uri=.
+- If it fails, it attempts to serve =index.php= with query parameters, and finally =index.html=
+- =/index.php?$args=:
+  - If the initial =$uri= doesn't resolve to a file, Nginx tries to route the request to =index.php=, appending any query string present in the original request
+  - The =$args= variable contains these query parameters, which allows PHP scripts to access the full query string as they normally would
+** add_header Last-Modified $date_gmt;
+- This adds an HTTP header to responses indicating the last modified date/time of the content
+** add_header Cache-Control 'no-store, no-cache';
+- This sets cache control headers to instruct browsers or intermediate caches not to store or cache the response.
+** if_modified_since off;
+- allows clients to ask server if a resource has been modified since the last clients fetch
+- server will always host fresh content
+** expires off;
+- resource becomes stale after this time
+- resource is therefore immediately expired
+- forces re-validation and re-fetching every request (validating if resource is still fresh)
+** etag off;
+- unique identifier assigned by the server to a specific version of a resource
+- helps to determine if a resource has changed.
+- Disabling it with =etag off;= prevents this check, ensuring new content is requested every time.
+
+* *(Commented Block)*
+- The block handling PHP files is commented out:
+- *fastcgi_split_path_info*, *fastcgi_pass*, *fastcgi_index*, *include fastcgi_params*, etc., are used to configure FastCGI processing of PHP files, specifying server and path information for PHP requests.

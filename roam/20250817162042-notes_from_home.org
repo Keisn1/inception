@@ -1,0 +1,15 @@
+:PROPERTIES:
+:ID:       91fa09a0-17b8-4279-885d-4ede4c784641
+:END:
+#+title: notes from home
+#+date: [2025-08-17 Sun 16:20]
+#+startup: overview
+
+* TODO
+- [ ] nginx configuration has commented out section, so that we can access the site from host machine, test this out
+- [ ] php location in nginx conf
+  - [ ] check out how this actually works
+- [ ] check all the alpine versions
+- [ ] set the right php version
+  - https://www.php.net/
+  - php8 also in the dockerfile

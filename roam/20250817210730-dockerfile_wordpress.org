@@ -1,0 +1,113 @@
+:PROPERTIES:
+:ID:       ca86e1cd-15f5-4bdc-b2da-12d9f5950766
+:END:
+#+title: dockerfile wordpress
+#+date: [2025-08-17 Sun 21:07]
+#+startup: overview
+
+https://www.php.net/
+https://make.wordpress.org/hosting/handbook/server-environment/
+
+* listening to any network device
+- =listen = 9000= accepts connections from any IP address on port 9000
+- this allows nginx container to communicate with PHP-FPM container
+#+begin_src dockerfile
+sed -i "s|listen = 127.0.0.1:9000|listen = 9000|g" /etc/php8/php-fpm.d/www.conf
+#+end_src
+* uncomment the listen.owner and listen.group
+#+begin_src dockerfile
+sed -i "s|;listen.owner = nobody|listen.owner = nobody|g" /etc/php8/php-fpm.d/www.conf
+sed -i "s|;listen.group = nobody|listen.group = nobody|g" /etc/php8/php-fpm.d/www.conf
+#+end_src
+- Sets the socket ownership to =nobody:nobody=
+- Ensures proper permissions for the socket file, preventing permission denied errors when nginx tries to connect to PHP-FPM
+- They might prevent some PHP-FPM configuration warnings, but that's about it.
+** *What are sockets in PHP-FPM?*
+PHP-FPM can listen in two ways:
+- *TCP socket*: =127.0.0.1:9000= (network connection)
+- *Unix socket*: =/var/run/php-fpm.sock= (file-based connection)
+
+*Socket ownership matters for Unix sockets:*
+When PHP-FPM creates a Unix socket file, it needs proper ownership/permissions so other processes (like nginx) can access it.
+
+*However, in your case:*
+You're using =listen = 9000= (TCP), not a Unix socket, so the =listen.owner= and =listen.group= settings actually *don't apply*.
+
+*Why uncomment them anyway?*
+- *Configuration consistency*: Prevents PHP-FPM warnings about undefined ownership
+- *Future flexibility*: If you later switch to Unix sockets
+- *Default Alpine behavior*: Some Alpine PHP-FPM configs expect these to be set
+
+*If you were using Unix sockets:*
+#+begin_src dockerfile
+# This would matter:
+listen = /var/run/php-fpm.sock
+listen.owner = nginx
+listen.group = nginx
+listen.mode = 0660
+#+end_src
+
+*Bottom line:* Since you're using TCP (=listen = 9000=), the ownership lines are mostly cosmetic but harmless. The important change is the first line that enables inter-container communication.
+
+***
+* download wordpress and extract into /var/www
+#+begin_src dockerfile
+RUN wget https://wordpress.org/latest.zip && \
+    unzip latest.zip && \
+    cp -rf wordpress/* . && \
+    rm -rf wordpress latest.zip
+#+end_src
+* copy wp-config-create.sh script into /var/www
+#+begin_src dockerfile
+COPY ./requirements/wordpress/conf/wp-config-create.sh .
+#+end_src
+* Run and remove the script
+#+begin_src dockerfile
+RUN sh wp-config-create.sh && rm wp-config-create.sh && \
+#+end_src
+* set permission on wp-content
+#+begin_src dockerfile
+# Create dedicated WordPress user
+RUN adduser -D -s /bin/sh wordpress
+
+# Set ownership - WordPress process needs to own the files
+RUN chown -R wordpress:wordpress /var/www/wp-content
+
+# Set proper permissions
+# Directories: 755 (owner can read/write/execute, others can read/execute)
+# Files: 644 (owner can read/write, others can read only)
+RUN find /var/www/wp-content -type d -exec chmod 755 {} \; && \
+    find /var/www/wp-content -type f -exec chmod 644 {} \;
+#+end_src
+** user creation
+- ~-D~: Creates user without password
+  - User account is "disabled" for login purposes
+  - No interactive shell login allowed
+  - Perfect for service accounts that don't need human login
+
+- ~-s /bin/sh~: Sets the user's shell to =/bin/sh=
+  - Even though =-D= disables login, some processes need a valid shell
+  - PHP-FPM or other services might check the user's shell
+  - =/bin/sh= is the minimal shell in Alpine
+
+- Why this combination?
+  - Creates a non-interactive service user
+  - Has a valid shell for process execution
+  - Cannot be used for login/SSH access
+  - Follows security best practice of dedicated users for services
+** user ownership and permissions
+- PHP-FPM runs as a specific user, and that user needs to own files it manipulates
+- wordpress may need to create directories and files
+  - Uploads: Users upload images/media → needs write to =/wp-content/uploads/=
+  - Plugin installation: WordPress downloads/installs plugins → needs write to =/wp-content/plugins/=
+  - Theme customization: CSS changes, theme uploads → needs write to =/wp-content/themes/=
+  - Cache files: WordPress creates temporary/cache files
+  - /Updates/: WordPress core/plugin updates need file modification
+
+* CMD - running wordpress
+#+begin_src dockerfile
+CMD ["/usr/sbin/php-fpm8", "-F"]
+#+end_src
+- Starts PHP-FPM as the main container process
+- =-F= flag runs PHP-FPM in foreground mode (doesn't daemonize)
+- *Why =-F=*: Docker containers need the main process to run in foreground, otherwise the container exits immediately

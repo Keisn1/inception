@@ -1,0 +1,35 @@
+:PROPERTIES:
+:ID:       6775fb02-5ff9-4330-841b-15b4f5ad7aed
+:END:
+#+title: nginx service
+#+date: [2025-08-17 Sun 17:04]
+#+startup: overview
+
+#+begin_src conf
+services:
+  nginx:
+    build:
+      context: .
+      dockerfile: requirements/nginx/Dockerfile
+    container_name: nginx
+    #    depends_on:
+    #      - wordpress
+    ports:
+      - "443:443"
+    volumes:
+      - ./requirements/nginx/conf/:/etc/nginx/http.d/
+      - ./requirements/nginx/tools:/etc/nginx/ssl/
+      - ./requirements/nginx/simple_docker_nginx_html/public/html:/var/www/
+    restart: always
+#+end_src
+
+
+* *volumes*:
+- map directories or files from the host filesystem to the container filesystem
+- This allows for data persistence and sharing between the host and the container
+- facilitates keeping data outside of the container's lifecycle, meaning that even if a container is removed, the data in the volume persists.
+
+* *ports*:
+- forward or map a port on the host machine to a port in the container
+- This allows external access to the services running inside the container
+- The typical syntax is =host_port:container_port=, enabling network traffic on the host port to be directed to the specified port on the container.

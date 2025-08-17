@@ -1,0 +1,37 @@
+:PROPERTIES:
+:ID:       7036e28d-0d77-45f1-8bec-bc378d3e0e0a
+:END:
+#+title: difference mysql_install_db and mysqld
+#+date: [2025-08-17 Sun 18:53]
+#+startup: overview
+
+* what's the difference between mysqld and mysql_install_db (from the dockerfile) ?
+
+Great question! These are two different tools with distinct purposes:
+
+*=mysql_install_db=* (from Dockerfile):
+- /Installation utility/ - sets up the initial MySQL system
+- Creates the basic database structure (=mysql=, =information_schema=, etc.)
+- Sets up system tables for users, privileges, etc.
+- Creates initial files and directories
+- /Runs once/ during setup
+- Think: "prepare the foundation"
+
+*=mysqld=* (the server daemon):
+- The actual /database server process/
+- Handles SQL queries, connections, transactions
+- Reads/writes to the database files created by =mysql_install_db=
+- /Runs continuously/ to serve clients
+- Think: "the actual service"
+
+*In the workflow:*
+1. =mysql_install_db= → Creates empty MySQL system (Dockerfile)
+2. =mysqld --bootstrap= → Runs server briefly to execute setup SQL (script)
+3. =mysqld= normally → Serves database requests (container runtime)
+
+*Analogy:*
+- =mysql_install_db= = Building a house foundation and basic structure
+- =mysqld --bootstrap= = Moving in furniture before opening
+- =mysqld= = Living in the house and welcoming guests
+
+Without =mysql_install_db= first, =mysqld= would have nothing to work with - no system tables, no user accounts, no database structure.

@@ -1,0 +1,53 @@
+:PROPERTIES:
+:ID:       0cbffd7d-1ef4-4441-88d5-5cc503c706c2
+:END:
+#+title: docker mariaDB
+#+date: [2025-08-13 Wed 21:39]
+#+startup: overview
+
+- lightweight to MySQL
+* what we need
+- installed mariadb + mariadb-client
+- mysql configuration file
+- mariadb configuration change
+- file to run sql script
+- sql script to create worpdress database
+* step by step
+1. [X] install mariadb + mariadb-client in Dockerfile
+2. [X] change mysql configuration (can be done directly in Dockerfile, there are only a few lines)
+3. [X] change mariadb config (just one line, change directly in Dockerfile)
+4. [X] copy the database configuration config from outside
+5. [ ] create file for sql query
+6. [ ] throw the request body itself into this file
+7. [ ] execute create database query
+8. [ ] create a configuration for docker-compose
+9. [ ] correctly pass passwords and usernames through environment variables
+
+* [[id:7742e104-5594-4ebf-b058-c90ab66e812e][dockerfile]]
+* [[id:83c7a7cf-b85a-4a2a-9213-a6aa0ea48894][create_db.sh]]
+* docker-compose
+#+begin_src conf
+  mariadb:
+    build:
+      context: .
+      dockerfile: requirements/mariadb/Dockerfile
+      args:
+        DB_NAME: ${DB_NAME}
+        DB_USER: ${DB_USER}
+        DB_PASS: ${DB_PASS}
+        DB_ROOT: ${DB_ROOT}
+    container_name: mariadb
+    ports:
+      - "3306:3306"
+    volumes:
+      - db-volume:/var/lib/mysql
+    restart: always
+#+end_src
+
+* verify
+#+begin_src shell
+docker exec -it mariadb mysql -u root
+#+end_src
+#+begin_src shell
+show databases;
+#+end_src

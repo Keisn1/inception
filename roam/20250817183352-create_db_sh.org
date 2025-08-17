@@ -1,0 +1,119 @@
+:PROPERTIES:
+:ID:       83c7a7cf-b85a-4a2a-9213-a6aa0ea48894
+:END:
+#+title: create_db.sh
+#+date: [2025-08-17 Sun 18:33]
+#+startup: overview
+
+#+begin_src shell
+#!bin/sh
+
+if [ ! -d "/var/lib/mysql/mysql" ]; then
+
+        chown -R mysql:mysql /var/lib/mysql
+
+        # init database
+        mysql_install_db --basedir=/usr --datadir=/var/lib/mysql --user=mysql --rpm
+
+        tfile=`mktemp`
+        if [ ! -f "$tfile" ]; then
+                return 1
+        fi
+fi
+
+if [ ! -d "/var/lib/mysql/wordpress" ]; then
+
+        cat << EOF > /tmp/create_db.sql
+USE mysql;
+FLUSH PRIVILEGES;
+DELETE FROM     mysql.user WHERE User='';
+DROP DATABASE test;
+DELETE FROM mysql.db WHERE Db='test';
+DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
+ALTER USER 'root'@'localhost' IDENTIFIED BY '${DB_ROOT}';
+CREATE DATABASE ${DB_NAME} CHARACTER SET utf8 COLLATE utf8_general_ci;
+CREATE USER '${DB_USER}'@'%' IDENTIFIED by '${DB_PASS}';
+GRANT ALL PRIVILEGES ON wordpress.* TO '${DB_USER}'@'%';
+FLUSH PRIVILEGES;
+EOF
+        # run init.sql
+        /usr/bin/mysqld --user=mysql --bootstrap < /tmp/create_db.sql
+        rm -f /tmp/create_db.sql
+fi
+#+end_src
+
+* if [ ! -d "/var/lib/mysql/mysql" ];
+- Checks if the =/var/lib/mysql/mysql= directory does NOT exist
+- This directory contains MySQL's system database
+- If it doesn't exist, the database hasn't been initialized yet
+** if block
+- ~chown mysql:mysql /var/lib/mysql~
+  - reensures that /var/lib/mysql is owned by mysql:mysql
+  - might have been reset by other processes
+  - script may run in a different context
+
+#+begin_src bash
+mysql_install_db --basedir=/usr --datadir=/var/lib/mysql --user=mysql --rpm
+#+end_src
+Creates the initial MySQL system database structure with:
+- =--basedir=/usr=: MySQL installation directory
+- =--datadir=/var/lib/mysql=: Where database files are stored
+- =--user=mysql=: Run as mysql user
+* if [ ! -d "/var/lib/mysql/wordpress" ]; then
+- if the wordpress database doesn't exist, then
+
+** create sql script which sets it up the wordpress database
+*** general
+- Removes anonymous users and test database (security cleanup)
+- Sets root password using =${DB_ROOT}= environment variable
+- Creates WordPress database with UTF8 encoding
+- Creates a user =${DB_USER}= with password =${DB_PASS}=
+- Grants full privileges on the WordPress database
+*** line by line
+1. Switches to the =mysql= system database (contains user accounts, privileges, etc.)
+   #+begin_src sql
+   USE mysql;
+   #+end_src
+2. Reloads privilege tables from disk - ensures any changes take effect immediately.
+   #+begin_src sql
+   FLUSH PRIVILEGES;
+   #+end_src
+3. Removes anonymous users (users with empty usernames) - security hardening.
+   #+begin_src sql
+   DELETE FROM mysql.user WHERE User='';
+   #+end_src
+4. Deletes the default =test= database that comes with MySQL - another security measure.
+   #+begin_src sql
+   DROP DATABASE test;
+   #+end_src
+5. Removes any remaining privileges related to the deleted =test= database.
+   #+begin_src sql
+   DELETE FROM mysql.db WHERE Db='test';
+   #+end_src
+6. Removes root accounts that can connect from remote hosts - only allows local root access.
+   #+begin_src sql
+   DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
+   #+end_src
+7. Sets a password for the local root user (using environment variable =DB_ROOT=).
+   #+begin_src sql
+   ALTER USER 'root'@'localhost' IDENTIFIED BY '${DB_ROOT}';
+   #+end_src
+8. Creates the WordPress database with UTF8
+   #+begin_src sql
+   CREATE DATABASE ${DB_NAME} CHARACTER SET utf8 COLLATE utf8_general_ci;
+   #+end_src
+
+** Executes the SQL script in bootstrap mode
+#+begin_src bash
+/usr/bin/mysqld --user=mysql --bootstrap < /tmp/create_db.sql
+#+end_src
+- Runs mysqld in bootstrap mode to execute the initialization SQL
+- Bootstrap mode is used because *the MySQL server isn't running yet* when this script executes.
+- Bootstrap mode (=--bootstrap=) allows mysqld to:
+  1. *Start without networking* - No TCP/IP connections, no socket files
+  2. *Run single-user mode* - Only processes SQL from stdin, then exits
+  3. *Skip normal startup procedures* - No privilege checking, no daemon processes
+  4. *Initialize system tables* - Perfect for first-time database setup
+
+- It's essentially MySQL's "installation mode" - designed specifically for initial database setup before the server runs as a service.
+- see also [[id:7036e28d-0d77-45f1-8bec-bc378d3e0e0a][difference mysql_install_db and mysqld]]

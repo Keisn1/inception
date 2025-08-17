@@ -1,0 +1,59 @@
+:PROPERTIES:
+:ID:       26d1641f-24b1-4b06-8a09-f7aafbe3f4da
+:END:
+#+title: DNS hostname caching
+#+date: [2025-08-17 Sun 18:17]
+#+startup: overview
+
+- DNS hostname caching is when MySQL stores the results of DNS lookups to avoid repeating them.
+
+- *How it works:*
+  1. Client connects to MySQL from IP address (e.g., 192.168.1.100)
+  2. MySQL does reverse DNS lookup: 192.168.1.100 → client.example.com
+  3. MySQL caches this mapping in memory
+  4. Next connection from same IP uses cached hostname instead of doing DNS lookup again
+
+- *Why MySQL does this:*
+  - Faster subsequent connections (no DNS delay)
+  - Can use hostnames in permission grants like =user@'%.example.com'=
+
+- *Problems in containers:*
+  - Container IPs change frequently
+  - DNS might not be properly configured
+  - Cached entries can become stale
+  - Can cause connection delays or failures
+
+* why does mysql need this reverse DNS lookup?
+
+** access control
+
+*Access control:*
+MySQL grants are often hostname-based:
+#+begin_src sql
+GRANT SELECT ON mydb.* TO 'user'@'%.example.com';
+GRANT SELECT ON mydb.* TO 'user'@'webserver.company.com';
+#+end_src
+
+To check these permissions, MySQL needs to:
+1. Get client IP (192.168.1.100)
+2. Reverse lookup IP → hostname (webserver.company.com)
+3. Match hostname against grant patterns
+** logging purposes
+- MySQL logs often show hostnames instead of IPs for readability:
+#+begin_src
+[Note] Access granted for user@webserver.company.com
+#+end_src
+
+** *Security verification:*
+Some setups use forward-confirmed reverse DNS:
+1. IP → hostname (reverse lookup)
+2. hostname → IP (forward lookup)
+3. Verify IPs match (prevents spoofing)
+
+** *Why containers skip it:*
+- Container grants typically use IPs: ='user'@'172.17.0.%'=
+- Container hostnames change frequently
+- DNS often not properly configured in container networks
+- Performance more important than hostname-based access control
+
+So it's a legacy feature that made sense for traditional server deployments but adds overhead in modern containerized environments.

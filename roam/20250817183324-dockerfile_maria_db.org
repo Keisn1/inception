@@ -1,0 +1,138 @@
+:PROPERTIES:
+:ID:       7742e104-5594-4ebf-b058-c90ab66e812e
+:END:
+#+title: dockerfile maria db
+#+date: [2025-08-17 Sun 18:33]
+#+startup: overview
+
+#+begin_src dockerfile
+FROM alpine:3.16
+
+ARG DB_NAME \
+    DB_USER \
+    DB_PASS
+
+RUN apk update && apk add --no-cache mariadb mariadb-client
+
+RUN mkdir /var/run/mysqld; \
+    chmod 777 /var/run/mysqld; \
+    { echo '[mysqld]'; \
+      echo 'skip-host-cache'; \
+      echo 'skip-name-resolve'; \
+      echo 'bind-address=0.0.0.0'; \
+    } | tee  /etc/my.cnf.d/network.cnf; \
+    sed -i "s|skip-networking|skip-networking=0|g" \
+      /etc/my.cnf.d/mariadb-server.cnf
+
+RUN mysql_install_db --user=mysql --datadir=/var/lib/mysql
+
+EXPOSE 3306
+
+COPY requirements/mariadb/conf/create_db.sh .
+RUN sh create_db.sh && rm create_db.sh
+USER mysql
+CMD ["/usr/bin/mysqld", "--skip-log-error"]
+#+end_src
+* MySQL socket creation / ownership and permissions
+- MySQL/MariaDB uses a Unix socket file for local connections (faster than TCP)
+- The socket file is typically created at =/var/run/mysqld/mysqld.sock=
+- This directory (=/var/run/mysqld=) must exist before MariaDB starts
+
+** worldwide permissions
+#+begin_src dockerfile
+RUN mkdir /var/run/mysqld
+RUN chmod 777 /var/run/mysqld
+#+end_src
+- MariaDB server needs to CREATE the socket file in this directory
+- Other processes (like mysql client) need to READ/WRITE to the socket
+- =chmod 777= gives full permissions (read/write/execute) to everyone
+- This is overly permissive but common in containers for simplicity
+
+*** What happens:
+1. Container starts → =/var/run/mysqld= exists with 777 permissions
+2. MariaDB starts → creates =/var/run/mysqld/mysqld.sock= socket file
+3. Local clients can connect via: =mysql -S /var/run/mysqld/mysqld.sock=
+
+*** Note
+- The 777 permissions are just for the directory.
+- The actual socket file permissions are controlled by MariaDB itself when it creates the file.
+- In production, you'd typically use more restrictive permissions and proper user/group ownership.
+** restrictive permissions
+#+begin_src dockerfile
+RUN mkdir -p /var/run/mysqld && \
+    chown -R mysql:mysql /var/run/mysqld && \
+    chmod 700 /var/run/mysqld
+#+end_src
+*** Permissions breakdown:
+- =700= = owner: rwx, group: r-x, others: none
+- Only =mysql= user can write, =mysql= group can read/access
+- No access for other users
+
+** Why it works:
+- MariaDB runs as =mysql= user (from =USER mysql=)
+- Socket file inherits directory ownership
+- Local clients connecting as =mysql= user can access socket
+* MySQL configuration (/etc/my.cnf.d)
+
+- Main config: =/etc/my.cnf=
+- =/etc/my.cnf.d/= is MariaDB's configuration directory where it looks for additional configuration files.
+- MariaDB automatically reads all =.cnf= files in the =my.cnf.d= directory and applies them alongside the main configuration
+- lets you organize settings into separate files rather than putting everything in one large config file
+
+** custom.cnf
+#+begin_src conf
+[mysqld]
+skip-host-cache
+skip-name-resolve
+bind-address=0.0.0.0
+#+end_src
+
+- =/etc/my.cnf.d/network.cnf= is a custom MySQL configuration file created by this Dockerfile
+
+- =skip-host-cache=
+  - Normally MySQL caches hostname lookups, but in containers this can cause connection issues
+  - Disables [[id:26d1641f-24b1-4b06-8a09-f7aafbe3f4da][DNS hostname caching]]:
+
+- =skip-name-resolve=
+  - Disables reverse DNS lookups entirely.
+  - MySQL won't try to resolve IP addresses to hostnames, speeding up connections and avoiding DNS-related connection failures
+
+- =bind-address=0.0.0.0=
+  - Makes MySQL listen on all network interfaces instead of just localhost
+  - Essential for external connections to the container
+** mariadb-server.cnf
+#+begin_src conf
+skip-networking=0               # (0 = false)
+#+end_src
+- explicitly enables networking (MariaDB might disable it by default)
+* Database setup
+- Initializes MySQL data directory with =mysql_install_db=
+- Exposes port 3306 (standard MySQL port)
+
+*What =mysql_install_db= does:*
+- *Initializes the MySQL system database* - creates the core =mysql= database with system tables
+- *Creates system tables* like:
+  - =mysql.user= (user accounts and permissions)
+  - =mysql.db= (database-level privileges)
+  - =mysql.host=, =mysql.tables_priv=, etc.
+- *Sets up default accounts* including root user
+- *Creates data directory structure* at =/var/lib/mysql=
+
+*The flags:*
+- =--user=mysql= - Sets ownership of created files to the =mysql= user (for security)
+- =--datadir=/var/lib/mysql= - Specifies where to create the database files (MariaDB's default location)
+
+*Why this is needed:*
+- Fresh MariaDB installation has no databases
+- You can't start MySQL daemon without the system database
+- This is like "formatting" the database before first use
+
+*What gets created in =/var/lib/mysql=:*
+- =mysql/= directory (system database)
+- =performance_schema/= directory
+- Various log and control files
+- File permissions set for =mysql= user
+
+After this runs, MariaDB has a functioning (empty) database ready to accept connections and create user databases.
+
+see also: [[id:7036e28d-0d77-45f1-8bec-bc378d3e0e0a][difference mysql_install_db and mysqld]]

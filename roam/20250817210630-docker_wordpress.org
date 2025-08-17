@@ -1,0 +1,22 @@
+:PROPERTIES:
+:ID:       38c8d785-fe93-4edf-810c-9d1cfd1970e2
+:END:
+#+title: docker wordpress
+#+date: [2025-08-17 Sun 21:06]
+#+startup: overview
+
+* what to do
+- php with plugins for wordpress
+- php-fpm for communication with nginx
+- wordpress itself. Just so it is there.
+* steps
+1. [ ] install via Dockerfile php with all plugins
+2. [ ] install all necessary programs via Dockerfile
+3. [ ] download and put WordPress itself in /var/www, also via Dockerfile
+4. [ ] put the correct fastcgi config ( www.conf ) into the container
+5. [ ] run in fastcgi container via php-fpm socket
+6. [ ] add all necessary sections to docker-compose
+7. [ ] set the order in which containers are launched
+8. [ ] add section with wordpress to container with nginx
+9. [ ] test to make sure everything works
+*
