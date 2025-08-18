@@ -19,4 +19,3 @@
 7. [ ] set the order in which containers are launched
 8. [ ] add section with wordpress to container with nginx
 9. [ ] test to make sure everything works
-*

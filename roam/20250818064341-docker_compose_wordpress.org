@@ -1,0 +1,77 @@
+:PROPERTIES:
+:ID:       1f8c451f-bc7b-4405-9cd1-f4fec5560990
+:END:
+#+title: docker compose wordpress
+#+date: [2025-08-18 Mon 06:43]
+#+startup: overview
+
+- need to use bind-mounts to have the volumes at the correct location
+* uses named volumes with bind-mounts
+#+begin_src yaml
+  wordpress:
+    ....
+    volumes:
+      - wp-volume:/var/www/
+
+volumes:
+  wp-volume:
+    driver_opts:
+      o: bind
+      type: none
+      device: /home/kay/workspace/inception-project/data/wordpress
+#+end_src
+
+** driver_opts
+- *Purpose*: Passes options to the volume driver (like mount command options)
+- *Common options*:
+  - =o=: Mount options (bind, rw, ro, etc.)
+  - =type=: Filesystem type (ext4, nfs, tmpfs, none)
+  - =device=: Source device/path
+- *Why use it?*
+  - Keep named volume syntax for Docker Compose organization
+  - Override Docker's default volume behavior
+  - Apply specific mount options
+
+* as opposed to
+** bind-mounts without naming
+- Maps exactly to the host path you specify
+- No Docker management of location
+- Docker just creates the mount point
+#+begin_src yaml
+volumes:
+  - ./host/path:/container/path
+  - /absolute/host/path:/container/path
+#+end_src
+** Anonymous Volumes
+- Docker automatically places them in =/var/lib/docker/volumes/=
+- Gets a random hash name like =a8f3b2c1d4e5...=
+- Docker manages the entire lifecycle
+- *Deleted when container is removed* (unless using =--volumes-from= or other persistence methods)
+  #+begin_src yaml
+volumes:
+  - /container/path  # No host path specified
+  #+end_src
+** docker-managed named volumes
+- Also stored in =/var/lib/docker/volumes/=
+- But keeps the name you gave it (e.g., =wp-volume=)
+- *Persists even after container removal*
+#+begin_src yaml
+volumes:
+  wp-volume:  # No driver_opts - Docker manages location
+
+services:
+  wordpress:
+    volumes:
+      - wp-volume:/var/www/
+#+end_src
+
+* volumes/bind-mounts and permissions
+https://docs.docker.com/engine/storage/volumes/
+https://docs.docker.com/engine/storage/bind-mounts/
+** bind-mounts
+- ✅ Container and host see *exactly the same files*
+- ✅ Permission/ownership changes persist on host
+- ✅ UID/GID from container appear on host
+** docker-managed volumes
+- The difference is *where* you see them
+- Permission changes DO persist in Docker volumes too

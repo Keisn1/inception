@@ -10,6 +10,7 @@
 - [ ] php location in nginx conf
   - [ ] check out how this actually works
 - [ ] check all the alpine versions
+- [ ] study the network directive
 - [ ] set the right php version
   - https://www.php.net/
   - php8 also in the dockerfile
